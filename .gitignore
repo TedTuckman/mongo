@@ -55,6 +55,7 @@
 /src/third_party/*/*.cache
 /src/third_party/*/*.tlog
 /src/third_party/*/*.lastbuildstate
+/src/third_party/antlr4/\.*
 config.log
 settings.py
 log_config.py

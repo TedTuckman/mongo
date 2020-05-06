@@ -41,6 +41,9 @@ thirdPartyEnvironmentModifications = {
    },
    'unwind' : {
    },
+    'antlr4' : {
+        'CPPPATH' : ['#src/third_party/antlr4/runtime/Cpp/runtime/src/'],
+}
 }
 
 def injectMozJS(thisEnv):
@@ -595,6 +598,17 @@ timelibEnv.Library(
     source=[
         'shim_timelib.cpp',
     ])
+
+antlrEnv = env.Clone()
+antlrEnv.InjectThirdParty(libraries=['antlr4'])
+antlrEnv.SConscript('antlr4' + '/SConscript', exports={ 'env' : antlrEnv})
+antlrEnv = antlrEnv.Clone(
+    LIBDEPS_INTERFACE=[
+        'antlr4/antlr-lib',
+    ])
+antlrEnv.Library(
+    target='shim_antlr',
+    source=['shim_antlr.cpp']),
 
 if wiredtiger:
     if use_system_version_of_library("wiredtiger"):
