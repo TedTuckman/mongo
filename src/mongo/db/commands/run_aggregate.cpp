@@ -75,6 +75,16 @@
 #include "mongo/util/scopeguard.h"
 #include "mongo/util/string_map.h"
 
+// TEDLOG ANTLR TEST
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#pragma GCC diagnostic ignored "-Wattributes"
+// #include "third_party/antlr4/runtime/Cpp/runtime/src/antlr4-runtime.h"
+#include "antlr4-runtime.h"
+#include "antlr_parser/mongoAgg-gen/MongoAggLexer.h"
+#include "antlr_parser/mongoAgg-gen/MongoAggParser.h"
+#include "mongo/db/commands/aggErrorListener.h"
+#include "mongo/db/commands/aggWalker.h"
+#pragma GCC diagnostic pop
 namespace mongo {
 
 using boost::intrusive_ptr;
@@ -500,6 +510,7 @@ Status runAggregate(OperationContext* opCtx,
                     const BSONObj& cmdObj,
                     const PrivilegeVector& privileges,
                     rpc::ReplyBuilderInterface* result) {
+    // TEDLOG ANTLR end
     // For operations on views, this will be the underlying namespace.
     NamespaceString nss = request.getNamespaceString();
 
@@ -623,6 +634,35 @@ Status runAggregate(OperationContext* opCtx,
         expCtx = makeExpressionContext(opCtx, request, std::move(*collatorToUse), uuid);
 
         auto pipeline = Pipeline::parse(request.getPipeline(), expCtx);
+
+        // TEDLOG ANTLR test
+        auto objToMutate = cmdObj;
+        objToMutate = objToMutate.removeField("lsid");
+        objToMutate = objToMutate.removeField("$db");
+        objToMutate = objToMutate.removeField("cursor");
+        auto cmdString = objToMutate.toString();
+        LOGV2(9999904, "TEDLOG origCmd {origCmd}", "origCmd"_attr = cmdString);
+        antlr4::ANTLRInputStream input(cmdString);
+        MongoAggLexer lexer(&input);
+        antlr4::CommonTokenStream tokens(&lexer);
+        tokens.fill();
+        MongoAggParser parser(&tokens);
+        parser.removeErrorListeners();
+        // antlr4::DiagnosticErrorListener errorListener;
+        // antlr4::ConsoleErrorListener errorListener;
+        AggErrorListener errorListener;
+        parser.addErrorListener(&errorListener);
+        try {
+            // antlr4::tree::ParseTree* tree = parser.aggregate();
+            MongoAggParser::AggregateContext* ctx = parser.aggregate();
+            // logd("TEDLOG tree {}", tree->toStringTree(true));
+            AggWalker walker;
+            walker.setExpressionContext(expCtx);
+            pipeline = walker.toPipeline(ctx, expCtx);
+            // auto something = walker.visit(tree);
+        } catch (std::invalid_argument& e) {
+            logd("TEDLOG error {}", e.what());
+        }
 
         // Check that the view's collation matches the collation of any views involved in the
         // pipeline.

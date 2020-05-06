@@ -1,0 +1,106 @@
+# -*- mode: python -*-
+import copy
+import re
+import textwrap
+
+Import('env')
+
+env = env.Clone()
+
+def AddFlagIfSupported(env, tool, extension, flag, link, **mutation):
+    def CheckFlagTest(context, tool, extension, flag):
+        if link:
+            if tool == 'C':
+                test_body = """
+                #include <stdlib.h>
+                #include <stdio.h>
+                int main() {
+                    printf("Hello, World!");
+                    return EXIT_SUCCESS;
+                }"""
+            elif tool == 'C++':
+                test_body = """
+                #include <iostream>
+                #include <cstdlib>
+                int main() {
+                    std::cout << "Hello, World!" << std::endl;
+                    return EXIT_SUCCESS;
+                }"""
+            context.Message('Checking if linker supports %s... ' % (flag))
+            ret = context.TryLink(textwrap.dedent(test_body), extension)
+        else:
+            test_body = ""
+            context.Message('Checking if %s compiler supports %s... ' % (tool, flag))
+            ret = context.TryCompile(textwrap.dedent(test_body), extension)
+        context.Result(ret)
+        return ret
+
+    if env.ToolchainIs('msvc'):
+        env.FatalError("AddFlagIfSupported is not currently supported with MSVC")
+
+    test_mutation = mutation
+    if env.ToolchainIs('gcc'):
+        test_mutation = copy.deepcopy(mutation)
+        # GCC helpfully doesn't issue a diagnostic on unknown flags of the form -Wno-xxx
+        # unless other diagnostics are triggered. That makes it tough to check for support
+        # for -Wno-xxx. To work around, if we see that we are testing for a flag of the
+        # form -Wno-xxx (but not -Wno-error=xxx), we also add -Wxxx to the flags. GCC does
+        # warn on unknown -Wxxx style flags, so this lets us probe for availablity of
+        # -Wno-xxx.
+        for kw in list(test_mutation.keys()):
+            test_flags = test_mutation[kw]
+            for test_flag in test_flags:
+                if test_flag.startswith("-Wno-") and not test_flag.startswith("-Wno-error="):
+                    test_flags.append(re.sub("^-Wno-", "-W", test_flag))
+
+    cloned = env.Clone()
+    cloned.Append(**test_mutation)
+
+    # For GCC, we don't need anything since bad flags are already errors, but
+    # adding -Werror won't hurt. For clang, bad flags are only warnings, so we need -Werror
+    # to make them real errors.
+    cloned.Append(CCFLAGS=['-Werror'])
+    conf = Configure(cloned, help=False, custom_tests = {
+            'CheckFlag' : lambda ctx : CheckFlagTest(ctx, tool, extension, flag)
+    })
+    available = conf.CheckFlag()
+    conf.Finish()
+    if available:
+        env.Append(**mutation)
+    return available
+
+def AddToCXXFLAGSIfSupported(env, flag):
+    return AddFlagIfSupported(env, 'C++', '.cpp', flag, False, CXXFLAGS=[flag])
+
+if env.ToolchainIs('clang', 'gcc'):
+    AddToCXXFLAGSIfSupported(env, "-Wno-overloaded-virtual")
+    AddToCXXFLAGSIfSupported(env, "-Wno-attributes")
+
+env.Library(
+    target='antlr-mongo-gen',
+    source=[
+        # 'forestry.cpp',
+        # 'cst_to_execution_translator.cpp',
+        'mongoAgg-gen/MongoAggBaseListener.cpp',
+        'mongoAgg-gen/MongoAggListener.cpp',
+        'mongoAgg-gen/MongoAggLexer.cpp',
+        'mongoAgg-gen/MongoAggParser.cpp',
+    ],
+    LIBDEPS=[
+        '$BUILD_DIR/third_party/shim_antlr',
+        # '$BUILD_DIR/mongo/db/pipeline/document_value',
+        # '$BUILD_DIR/mongo/db/pipeline/expression_context',
+        # '$BUILD_DIR/mongo/unittest/unittest',
+        # '$BUILD_DIR/mongo/util/summation',
+    ],
+)
+
+# env.CppUnitTest(
+    # target='sql_test',
+    # source=[
+        # 'sql_test.cpp',
+    # ],
+    # LIBDEPS=[
+        # 'sql',
+    # ],
+# )

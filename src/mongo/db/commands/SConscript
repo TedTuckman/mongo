@@ -4,6 +4,19 @@ Import("env")
 Import("has_option")
 
 env = env.Clone()
+env.InjectThirdParty(libraries=['antlr4'])
+# env.Append(
+    # CPPPATH=['#/src/third_party/antlr4/runtime/Cpp/runtime/src'],
+# )
+
+env.SConscript(
+    dirs=[
+        'antlr_parser',
+    ],
+    exports=[
+        'env',
+    ],
+)
 
 env.Library(
     target="test_commands_enabled",
@@ -250,6 +263,8 @@ env.Library(
 env.Library(
     target="standalone",
     source=[
+        "aggWalker.cpp",
+        "aggErrorListener.cpp",
         "count_cmd.cpp",
         "create_indexes.cpp",
         "current_op.cpp",
@@ -310,6 +325,8 @@ env.Library(
         '$BUILD_DIR/mongo/db/transaction',
         '$BUILD_DIR/mongo/db/views/views_mongod',
         '$BUILD_DIR/mongo/util/net/http_client',
+        'antlr_parser/antlr-mongo-gen',
+        # '$BUILD_DIR/third_party/shim_antlr',
         'core',
         'current_op_common',
         'fsync_locked',
