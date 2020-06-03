@@ -1,0 +1,40 @@
+# -*- mode: python -*-
+
+Import("env")
+
+env = env.Clone(tools=['yacc'], YACC='bison')
+
+env.Library(
+    target='bson_lexer',
+    source=[
+        'bson_lexer.cpp',
+        'cst_visitor.cpp',
+    ],
+    LIBDEPS=[
+        "$BUILD_DIR/mongo/base",
+        "$BUILD_DIR/mongo/db/pipeline/pipeline",
+    ],
+)
+
+env.Library(
+    target='cst',
+    source=[
+        env.CXXFile(target='mql_parser_gen.cpp', source='grammar.yy'),
+    ],
+    LIBDEPS=[
+        "$BUILD_DIR/mongo/base",
+        "bson_lexer",
+    ],
+)
+
+env.CppUnitTest(
+    target='cst_test',
+    source=[
+        'cst_test.cpp',
+    ],
+    LIBDEPS=[
+        '$BUILD_DIR/mongo/db/query/query_test_service_context',
+        '$BUILD_DIR/mongo/db/service_context_test_fixture',
+        'cst',
+    ]
+)
