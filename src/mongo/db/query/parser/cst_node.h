@@ -57,7 +57,10 @@ public:
 
 class CSTNodeProject : public CSTNode {
 public:
-    CSTNodeProject(std::string stageName, BSONObj spec)
+    // CSTNodeProject(std::string stageName, BSONObj spec)
+    //     : _stageName(std::move(stageName)), _spec(std::move(spec)) {}
+
+    CSTNodeProject(std::string stageName, StringMap<std::string> spec)
         : _stageName(std::move(stageName)), _spec(std::move(spec)) {}
 
     void acceptVisitor(CSTVisitor* visitor) final {
@@ -65,7 +68,9 @@ public:
     }
 
     std::string _stageName;
-    BSONObj _spec;
+    StringMap<std::string> _spec;
+
+    // BSONObj _spec;
 };
 
 }  // namespace mongo

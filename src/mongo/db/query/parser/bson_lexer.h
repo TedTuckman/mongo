@@ -41,6 +41,7 @@ namespace mongo {
 class BSONLexer {
 public:
     BSONLexer(std::vector<BSONElement> input);
+    BSONLexer(BSONObj input) : BSONLexer(input["pipeline"].Array()) {}
 
     /**
      * Collapses the token currently at _position until the next END_OBJ is encountered.

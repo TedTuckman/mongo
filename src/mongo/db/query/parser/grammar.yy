@@ -82,6 +82,7 @@
 %type <boost::intrusive_ptr<CSTNodeUnion>> unionWith
 %type <boost::intrusive_ptr<CSTNodeProject>> project
 %type <CSTPipeline> pipeline stageList optionalPipeline
+%type <StringMap<std::string>> projectElem
 
 //
 // Grammar rules
@@ -128,36 +129,26 @@ unionWith:
           $unionWith = make_intrusive<CSTNodeUnion>(std::move($STRING), std::move($optionalPipeline)); 
       }
 ;
-// THIS IS AN ATTEMPT AT USING MID-RULE ACTION TO HANDLE FIELD ORDER
-// unionWith:
-//     UNION_WITH STRING 
-//       { 
-//           $unionWith = make_intrusive<CSTNodeUnion>(std::move($STRING)); 
-//       }
-//     | UNION_WITH START_OBJECT { 
-//         driver.startOrderedObj(); 
-//       } 
-//       COLL_ARG STRING optionalPipeline END_OBJECT 
-//       { 
-//           $unionWith = make_intrusive<CSTNodeUnion>(std::move($STRING), std::move($optionalPipeline)); 
-//       }
-// | UNION_WITH START_OBJECT PIPELINE_ARG pipeline COLL_ARG STRING END_OBJECT 
-//   { 
-//       $unionWith = make_intrusive<CSTNodeUnion>(std::move($STRING), std::move($pipeline)); 
-//   }
-// ;
 
 //
 // $project
 // 
-project: PROJECT OPAQUE_OBJECT {
-    $project = make_intrusive<CSTNodeProject>("$project", std::move($OPAQUE_OBJECT));
+// project: PROJECT OPAQUE_OBJECT {
+//     $project = make_intrusive<CSTNodeProject>("$project", std::move($OPAQUE_OBJECT));
+// };
+
+// Traversal version
+project: PROJECT START_OBJECT projectElem END_OBJECT {
+  $project = make_intrusive<CSTNodeProject>("$project", std::move($projectElem));
 };
 
-// project: START_OBJECT projectElem END_OBJECT {};
-// projectElem: 
-//     %empty { }
-//     | STRING NUMBER_INT projectElem {}
+projectElem[result]: 
+    %empty { }
+    | STRING STRING projectElem[arg] { // Only supports projecting strings, sigh
+      $result = std::move($arg);
+      $result[$1] = $2;
+    }
+;
 
 //
 // Common rules

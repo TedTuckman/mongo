@@ -35,61 +35,6 @@
 
 namespace mongo {
 
-std::map<MQLBisonParser::token_type, std::string> reverseLookup = {
-    {MQLBisonParser::token::UNION_WITH, "$unionWith"},
-    {MQLBisonParser::token::PIPELINE_ARG, "pipeline"},
-    {MQLBisonParser::token::COLL_ARG, "coll"},
-};
-
-void BSONLexer::startOrderedObj() {
-    using kvPair = std::pair<MQLBisonParser::symbol_type, MQLBisonParser::symbol_type>;
-    struct symbolCompare {
-        bool operator()(const kvPair& elem1, const kvPair& elem2) const {
-            return reverseLookup[static_cast<MQLBisonParser::token::yytokentype>(
-                       elem1.first.type_get())] <
-                reverseLookup[static_cast<MQLBisonParser::token::yytokentype>(
-                    elem2.first.type_get())];
-        }
-    };
-    std::list<kvPair> sortedTokens;
-
-    // Scan the set of tokens starting at _position until END_OBJ is found.
-    auto currentPosition = _position;
-    while (_tokens[currentPosition].type_get() != MQLBisonParser::token::END_OBJECT) {
-        // TODO What if we encounter another START_OBJECT?
-        invariant(_tokens[currentPosition].type_get() != MQLBisonParser::token::START_OBJECT);
-        invariant(size_t(currentPosition) < _tokens.size());
-
-        // currentPosition is key, +1 is value.
-        // auto key = _tokens[currentPosition++];
-        // sortedTokens.insert({std::move(key), std::move(_tokens[currentPosition++])});
-        if (_tokens[currentPosition + 1].type_get() == MQLBisonParser::token::START_OBJECT ||
-            _tokens[currentPosition + 1].type_get() == MQLBisonParser::token::START_ARRAY) {
-
-        } else {
-            // SCALAR
-            sortedTokens.push_back(std::make_pair(std::move(_tokens[currentPosition]),
-                                                  std::move(_tokens[currentPosition + 1])));
-            // _tokens.erase(_tokens.begin() + currentPosition);
-            currentPosition += 2;
-        }
-    }
-    sortedTokens.sort(symbolCompare());
-
-    currentPosition = _position;
-
-    // for (auto&& moveIt = std::make_move_iterator(sortedTokens.begin()); moveIt !=
-    // std::make_move_iterator(sortedTokens.end()); moveIt++) {
-    for (auto&& kv : sortedTokens) {
-        // _tokens.insert(_tokens.begin() + currentPosition++, std::move(kv.first));
-        // _tokens.insert(_tokens.begin() + currentPosition++, std::move(kv.second));
-        // _tokens[currentPosition++] = MQLBisonParser::symbol_type(kv.first.type_get(),
-        // kv.first.value, kv.first.location);
-        _tokens[currentPosition++].move(kv.first);
-        _tokens[currentPosition++].move(kv.second);
-    }
-}
-
 // Structure used to annotate tokens, used to hint the lexer into behavior once the token is seen.
 // This does *not* contain any semantic value for the token.
 struct BSONToken {
@@ -117,8 +62,8 @@ StringMap<BSONToken> reservedKeyLookup = {
     // $project
     {"$project",
      {.tokenType = MQLBisonParser::token::PROJECT,
-      .traverseChild = false,
-      .orderedArguments = true}},
+      .traverseChild = true,
+      .orderedArguments = false}},
 };
 
 void BSONLexer::tokenize(BSONElement elem, bool includeFieldName) {
