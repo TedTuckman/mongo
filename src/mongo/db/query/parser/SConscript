@@ -50,6 +50,8 @@ env.Benchmark(
         "$BUILD_DIR/mongo/unittest/unittest",
         '$BUILD_DIR/mongo/util/processinfo',
         '$BUILD_DIR/mongo/db/commands/antlr_parser/antlr-mongo-gen',
+        '$BUILD_DIR/mongo/db/query/query_test_service_context',
+        '$BUILD_DIR/mongo/db/pipeline/pipeline',
         'cst',
     ],
 )

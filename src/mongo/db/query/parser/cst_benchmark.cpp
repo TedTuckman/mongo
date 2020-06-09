@@ -30,6 +30,7 @@
 #include "mongo/platform/basic.h"
 
 #include <benchmark/benchmark.h>
+#include <boost/intrusive_ptr.hpp>
 
 #include "mongo/unittest/unittest.h"
 #include "mongo/util/assert_util.h"
@@ -39,6 +40,13 @@
 #include "mongo/db/query/parser/bson_lexer.h"
 #include "mongo/db/query/parser/cst_node.h"
 #include "mongo/db/query/parser/mql_parser_gen.hpp"
+
+#include "mongo/db/pipeline/pipeline.h"
+#include "mongo/db/pipeline/aggregation_request.h"
+#include "mongo/db/pipeline/expression_context_for_test.h"
+#include "mongo/db/query/query_test_service_context.h"
+#include "mongo/db/query/projection_ast.h"
+#include "mongo/db/query/projection_parser.h"
 
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #pragma GCC diagnostic ignored "-Wattributes"
@@ -78,6 +86,8 @@ BSONObj buildSimpleProject(int nFields) {
     return BSON("$project" << projectSpec.obj());
 }
 
+} // namespace
+
 void BM_Bison_project_simple(benchmark::State& state) {
 	// std::cout << "Running Bison project with seed " << seed << std::endl;
 
@@ -91,6 +101,7 @@ void BM_Bison_project_simple(benchmark::State& state) {
         BSONLexer driver(pipelineObj);
         auto parseTree = MQLBisonParser(driver, &output);
         ASSERT_EQ(0, parseTree.parse());
+        benchmark::ClobberMemory();
     }
 }
 
@@ -114,16 +125,45 @@ void BM_ANTLR_project_simple(benchmark::State& state) {
             antlr4::CommonTokenStream tokens(&lexer);
             tokens.fill();
             MongoAggParser parser(&tokens);
-            MongoAggParser::AggregateContext* ctx = parser.aggregate();
-            invariant(ctx);
+            benchmark::DoNotOptimize(parser.aggregate());
+            benchmark::ClobberMemory();
         } catch (std::invalid_argument& e) {
             std::cout << "ANTLR threw: " << e.what() << std::endl;
         }
     }
 }
 
-BENCHMARK(BM_Bison_project_simple)->Arg(1)->Arg(10)->Arg(100);
-BENCHMARK(BM_ANTLR_project_simple)->Arg(1)->Arg(10)->Arg(100);
+void BM_baseline_project_simple(benchmark::State& state) {
+    auto project = buildSimpleProject(state.range(0));
 
-} // namespace
+    QueryTestServiceContext testServiceContext;
+    auto opCtx = testServiceContext.makeOperationContext();
+    const auto kTestNss = NamespaceString("test.bm");
+    AggregationRequest request(kTestNss, {project});
+    boost::intrusive_ptr<ExpressionContextForTest> expCtx =
+        new ExpressionContextForTest(opCtx.get(), request);
+
+    // This is where recording starts.
+    auto projectSpec = project["$project"].embeddedObject();
+    for (auto keepRunning : state) {
+        auto policies = ProjectionPolicies::aggregateProjectionPolicies();
+        benchmark::DoNotOptimize(projection_ast::parse(expCtx, projectSpec, policies));
+        benchmark::ClobberMemory();
+    }
+}
+
+/** 
+Notes
+    * Parsing with ANTLR operates on strictly formatted JSON strings (cannot just use bson::toString).
+    * ANTLR does not include the time to convert from BSON to string
+    * ANTLR parses at the top level aggregate command (likely not relevant)
+    * Both parsers traverse the $project spec
+        * Bison stores them as a set of KV pairs
+        * ANTLR builds a BSON per KV pair, then collapses into a single BSON at the end
+    * Baseline is stressing the projection_ast parser, which is the closest thing to a CST for $project
+ */
+// BENCHMARK(BM_baseline_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+// BENCHMARK(BM_Bison_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK(BM_ANTLR_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+
 } // namespace mongo
