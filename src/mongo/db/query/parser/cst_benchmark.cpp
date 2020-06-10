@@ -107,26 +107,29 @@ void BM_Bison_project_simple(benchmark::State& state) {
 
 void BM_ANTLR_project_simple(benchmark::State& state) {
     // ANTLR expects field names of $project to be quoted.
-    auto ss = str::stream();
-    ss << "pipeline: [{$project: { ";
-    for (auto i = 0; i < state.range(0); i++) {
-        if (i > 0)
-            ss << ",";
-        ss << "\"" << randomField() << "\": \"hey\"";
-    }
-    ss << "}}]";
+    // auto ss = str::stream();
+    auto project = buildSimpleProject(state.range(0));
+    auto pipelineObj = BSON("aggregate" << "test" << "pipeline" << BSON_ARRAY(project));
+    // ss << "pipeline: [{$project: { ";
+    // for (auto i = 0; i < state.range(0); i++) {
+        // if (i > 0)
+            // ss << ",";
+        // ss << "\"" << randomField() << "\": \"hey\"";
+    // }
+    // ss << "}}]";
 
     // std::cout << "ANTLR pipeline: " << ss << std::endl;
     // This is where recording starts.
     for (auto keepRunning : state) {
         try {
+            auto ss = pipelineObj.toString();
             antlr4::ANTLRInputStream input(ss);  // cmd.toString());
             MongoAggLexer lexer(&input);
             antlr4::CommonTokenStream tokens(&lexer);
             tokens.fill();
             MongoAggParser parser(&tokens);
-            // benchmark::DoNotOptimize(parser.aggregate());
-            benchmark::DoNotOptimize(parser.pipelineArg());
+            benchmark::DoNotOptimize(parser.aggregate());
+            // benchmark::DoNotOptimize(parser.pipelineArg());
             benchmark::ClobberMemory();
         } catch (std::invalid_argument& e) {
             std::cout << "ANTLR threw: " << e.what() << std::endl;
