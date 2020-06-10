@@ -3,5 +3,3 @@
 
 
 #include "MongoAggBaseVisitor.h"
-
-

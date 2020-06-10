@@ -32,7 +32,7 @@
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #pragma GCC diagnostic ignored "-Wattributes"
 #include "antlr4-runtime.h"
-#include "antlr_parser/mongoAgg-gen/MongoAggBaseVisitor.h"
+#include "mongoAgg-gen/MongoAggBaseVisitor.h"
 #pragma GCC diagnostic pop
 
 #include "mongo/db/pipeline/expression_context.h"

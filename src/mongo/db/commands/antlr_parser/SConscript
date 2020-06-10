@@ -79,28 +79,31 @@ if env.ToolchainIs('clang', 'gcc'):
 env.Library(
     target='antlr-mongo-gen',
     source=[
-        # 'forestry.cpp',
-        # 'cst_to_execution_translator.cpp',
+        'aggWalker.cpp',
+        'aggErrorListener.cpp',
         'mongoAgg-gen/MongoAggBaseListener.cpp',
         'mongoAgg-gen/MongoAggListener.cpp',
         'mongoAgg-gen/MongoAggLexer.cpp',
         'mongoAgg-gen/MongoAggParser.cpp',
     ],
     LIBDEPS=[
+        '$BUILD_DIR/mongo/base',
         '$BUILD_DIR/third_party/shim_antlr',
+        '$BUILD_DIR/mongo/db/pipeline/pipeline',
         # '$BUILD_DIR/mongo/db/pipeline/document_value',
         # '$BUILD_DIR/mongo/db/pipeline/expression_context',
-        # '$BUILD_DIR/mongo/unittest/unittest',
         # '$BUILD_DIR/mongo/util/summation',
     ],
 )
 
-# env.CppUnitTest(
-    # target='sql_test',
-    # source=[
-        # 'sql_test.cpp',
-    # ],
-    # LIBDEPS=[
-        # 'sql',
-    # ],
-# )
+env.CppUnitTest(
+    target='antlr_test',
+    source=[
+        'antlr_test.cpp',
+    ],
+    LIBDEPS=[
+        '$BUILD_DIR/mongo/db/query/query_test_service_context',
+        '$BUILD_DIR/mongo/db/service_context_test_fixture',
+        'antlr-mongo-gen',
+    ],
+)

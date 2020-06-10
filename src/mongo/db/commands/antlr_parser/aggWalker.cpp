@@ -31,7 +31,7 @@
 
 #include "mongo/platform/basic.h"
 
-#include "mongo/db/commands/aggWalker.h"
+#include "mongo/db/commands/antlr_parser/aggWalker.h"
 #include "mongo/db/pipeline/document_source_count.h"
 #include "mongo/db/pipeline/document_source_limit.h"
 #include "mongo/db/pipeline/document_source_project.h"

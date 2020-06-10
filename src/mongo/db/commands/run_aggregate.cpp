@@ -82,8 +82,8 @@
 #include "antlr4-runtime.h"
 #include "antlr_parser/mongoAgg-gen/MongoAggLexer.h"
 #include "antlr_parser/mongoAgg-gen/MongoAggParser.h"
-#include "mongo/db/commands/aggErrorListener.h"
-#include "mongo/db/commands/aggWalker.h"
+#include "mongo/db/commands/antlr_parser/aggErrorListener.h"
+#include "mongo/db/commands/antlr_parser/aggWalker.h"
 #pragma GCC diagnostic pop
 namespace mongo {
 
@@ -510,7 +510,6 @@ Status runAggregate(OperationContext* opCtx,
                     const BSONObj& cmdObj,
                     const PrivilegeVector& privileges,
                     rpc::ReplyBuilderInterface* result) {
-    // TEDLOG ANTLR end
     // For operations on views, this will be the underlying namespace.
     NamespaceString nss = request.getNamespaceString();
 

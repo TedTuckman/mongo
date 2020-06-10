@@ -31,7 +31,7 @@
 
 #include "mongo/platform/basic.h"
 
-#include "mongo/db/commands/aggErrorListener.h"
+#include "mongo/db/commands/antlr_parser/aggErrorListener.h"
 #include "mongo/logv2/log.h"
 
 namespace mongo {

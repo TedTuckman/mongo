@@ -3,5 +3,3 @@
 
 
 #include "MongoAggBaseListener.h"
-
-
