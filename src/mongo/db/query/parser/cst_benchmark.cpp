@@ -169,7 +169,7 @@ bson::toString).
 $project
  */
 BENCHMARK(BM_baseline_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
-BENCHMARK(BM_Bison_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
-BENCHMARK(BM_ANTLR_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000);
+BENCHMARK(BM_Bison_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000)->Arg(10000)->Arg(100000);
+BENCHMARK(BM_ANTLR_project_simple)->Arg(1)->Arg(10)->Arg(100)->Arg(1000)->Arg(10000)->Arg(100000);
 
 }  // namespace mongo
