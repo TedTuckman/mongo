@@ -713,3 +713,13 @@ kmsEnv.Library(
         'shim_kms_message.cpp',
     ])
 
+bisonEnv = env.Clone()
+bisonEnv.InjectThirdParty(libraries=['bison'])
+bisonEnv.SConscript('bison-' + bisonSuffix + '/SConscript', exports={ 'env' : bisonEnv})
+bisonEnv = bisonEnv.Clone(
+    LIBDEPS_INTERFACE=[
+        'bison/bison',
+    ])
+bisonEnv.Library(
+    target='shim_bison',
+    source=['shim_bison.cpp']),
