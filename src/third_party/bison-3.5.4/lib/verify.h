@@ -163,8 +163,14 @@
 /* _GL_COUNTER is an integer, preferably one that changes each time we
    use it.  Use __COUNTER__ if it works, falling back on __LINE__
    otherwise.  __LINE__ isn't perfect, but it's better than a
-   constant.  */
-#if defined __COUNTER__ && __COUNTER__ != __COUNTER__
+   constant.  
+  
+   MONGODB MODIFICATION: all of our supported compilers support __COUNTER__ so we don't need to test
+   for it here.  This test interferes with -E -fdirectives-only since it is illegal to use
+   __COUNTER__ in an #if clause with that flag because its value could change between the partial
+   preprocessing and the compile phases.
+*/
+#if true // defined __COUNTER__ && __COUNTER__ != __COUNTER__
 # define _GL_COUNTER __COUNTER__
 #else
 # define _GL_COUNTER __LINE__

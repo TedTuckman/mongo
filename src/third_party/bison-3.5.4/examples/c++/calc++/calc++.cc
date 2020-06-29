@@ -5,7 +5,6 @@ int
 main (int argc, char *argv[])
 {
   int res = 0;
-  std::cout << "parsing input: " << argv[1] << std::endl;
   driver drv;
   for (int i = 1; i < argc; ++i)
     if (argv[i] == std::string ("-p"))

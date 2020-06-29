@@ -1,3 +1,4 @@
 #include <config.h>
 #include "system.h"
-#include "src/scan-skel.c"
+// MONGODB MODIFICATION: point to build artifact
+// #include "src/scan-skel.c"

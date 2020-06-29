@@ -21,19 +21,29 @@
 %option prefix="code_" outfile="lex.yy.c"
 
 %{
+// MONGODB MODIFICATION: #error "Please include config.h first."
+#include <config.h>
 #include <c-ctype.h>
 #include <get-errno.h>
 #include <quote.h>
 
-#include <src/complain.h>
-#include <src/getargs.h>
-#include <src/muscle-tab.h>
-#include <src/reader.h>
-#include <src/scan-code.h>
-#include <src/symlist.h>
+// MONGODB MODIFICATION: already in src dir?
+#include <complain.h>
+#include <getargs.h>
+#include <muscle-tab.h>
+#include <reader.h>
+#include <scan-code.h>
+#include <symlist.h>
+// #include <src/complain.h>
+// #include <src/getargs.h>
+// #include <src/muscle-tab.h>
+// #include <src/reader.h>
+// #include <src/scan-code.h>
+// #include <src/symlist.h>
 
 #define FLEX_PREFIX(Id) code_ ## Id
-#include <src/flex-scanner.h>
+// MONGODB MODIFICATION: already in src dir?
+#include <flex-scanner.h>
 
 /* Work around a bug in flex 2.5.31.  See Debian bug 333231
    <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=333231>.  */

@@ -38,9 +38,9 @@
 namespace mongo {
 
 void CSTPipelineVisitor::visit(CSTNodeProject* projectNode) {
-    auto projectStage =
-        DocumentSourceProject::create(projectNode->_spec, _expCtx, projectNode->_stageName);
-    _translatedPipeline->pushBack(std::move(projectStage));
+    // auto projectStage =
+    //     DocumentSourceProject::create(projectNode->_spec, _expCtx, projectNode->_stageName);
+    // _translatedPipeline->pushBack(std::move(projectStage));
 }
 
 void CSTPipelineVisitor::visit(CSTNodeUnion* unionNode) {

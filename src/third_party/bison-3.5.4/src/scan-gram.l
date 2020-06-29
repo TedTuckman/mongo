@@ -23,21 +23,33 @@
 %{
 #include <errno.h>
 
+// MONGODB MODIFICATION: #error "Please include config.h first."
+#include <config.h>
 #include <c-ctype.h>
 #include <mbswidth.h>
 #include <quote.h>
 #include <quotearg.h>
 
-#include <src/complain.h>
-#include <src/files.h>
-#include <src/getargs.h>
-#include <src/gram.h>
-#include <src/reader.h>
-#include <src/scan-gram.h>
-#include <src/uniqstr.h>
+// MONGODB MODIFICATION: already in src dir?
+#include <complain.h>
+#include <files.h>
+#include <getargs.h>
+#include <gram.h>
+#include <reader.h>
+#include <scan-gram.h>
+#include <uniqstr.h>
+
+// #include <src/complain.h>
+// #include <src/files.h>
+// #include <src/getargs.h>
+// #include <src/gram.h>
+// #include <src/reader.h>
+// #include <src/scan-gram.h>
+// #include <src/uniqstr.h>
 
 #define FLEX_PREFIX(Id) gram_ ## Id
-#include <src/flex-scanner.h>
+// MONGODB MODIFICATION: already in src dir?
+#include <flex-scanner.h>
 
 /* Work around a bug in flex 2.5.31.  See Debian bug 333231
    <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=333231>.  */
